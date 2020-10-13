@@ -4,7 +4,6 @@ body {
 
 .App {
   text-align: center;
-  background-color: ;
 }
 
 .chart {
@@ -30,7 +29,7 @@ body {
 .currencyRow {
   margin: 5px auto;
   display: flex;
-  width: 500px;
+  width: 300px;
   justify-content: space-between;
 }
 

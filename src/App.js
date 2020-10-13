@@ -6,33 +6,20 @@ import './App.css';
 
 function App() {
   const [currencyList, setCurrencyList] = useState([]);
-  const [shortCurrencyList, setShortList] = useState([]);
-  const [currencyNames, setCurrencyNames] = useState([]);
   const [secondInput, setSecondInput] = useState(0);
   const [firstInput, setFirstInput] = useState(0);
-  const [baseConvertValue, setBaseConvertValue] = useState('EUR');
-  const [convertValue, setConvertValue] = useState('EUR');
+  const [baseConvertValue, setBaseConvertValue] = useState('USD');
+  const [convertValue, setConvertValue] = useState('USD');
   const [favorites, setFavorites] = useState([]);
   const [days, setDays] = useState([]);
   const [choppedDays, setChoppedDays] = useState([]);
   const [isHidden, setHidden] = useState(true);
 
   useEffect(() => {
-    fetch('http://data.fixer.io/api/latest?access_key=48ae94633d08720a55c5b80edc727945')
-      .then(response => { return response.json() })
-      .then(data => setCurrencyList(Object.entries(data.rates)));
-    fetch('http://data.fixer.io/api/symbols?access_key=48ae94633d08720a55c5b80edc727945')
-      .then(response => { return response.json() })
-      .then(data => setCurrencyNames(Object.entries(data.symbols)));
     fetch('https://api.exchangeratesapi.io/latest')
       .then(response => { return response.json() })
-      .then(data => setShortList(Object.entries(data.rates)));
+      .then(data => setCurrencyList(Object.entries(data.rates)));
   }, []);
-
-  const getName = (currencyToFind) => {
-    const name = currencyNames.find(currency => currency[0] === currencyToFind);
-    return name ? name[1] : '';
-  };
 
   const handleInput = ({target}) => {
     setFirstInput(target.value);
@@ -52,7 +39,6 @@ function App() {
   const handleSecondSelect = ({target}) => {
     setConvertValue(target.value);
     setSecondInput(+(firstInput/getValue(baseConvertValue)*getValue(target.value)).toFixed(2));
-
   };
 
   const getValue = (currencyToFindValue) => {
@@ -74,19 +60,25 @@ function App() {
     )
   };
 
+  const today = new Date();
+
   const handleInfo = ({target}) => {
-    if(shortCurrencyList.find(day => day[0] === target.value)) {
-      fetch(`https://api.exchangeratesapi.io/history?start_at=2015-10-10&end_at=2020-10-10&symbols=${target.value}`)
+    if(currencyList.find(day => day[0] === target.value)) {
+      fetch(`https://api.exchangeratesapi.io/history?start_at=${today.getFullYear() - 5}-${
+        (today.getMonth() < 9 ? '0': '') + (today.getMonth() + 1)
+      }-${(today.getDate() < 10 ? '0': '') + today.getDate()}&end_at=${today.getFullYear()}-${
+        (today.getMonth() < 9 ? '0': '') + (today.getMonth() + 1)
+      }-${(today.getDate() < 10 ? '0': '') + today.getDate()}&base=${baseConvertValue}&symbols=${target.value}`)
         .then(response => { return response.json() })
         .then(data => {
           setDays(
             Object.entries(data.rates)
-              .map(entry => ({date: entry[0], rate: entry[1][target.value]}))
+              .map(entry => ({date: entry[0], rate: entry[1][target.value].toFixed(3)}))
               .sort((a, b) => new Date(a.date) - new Date(b.date))
           );
           setChoppedDays(
             Object.entries(data.rates)
-              .map(entry => ({date: entry[0], rate: entry[1][target.value]}))
+              .map(entry => ({date: entry[0], rate: entry[1][target.value].toFixed(3)}))
               .sort((a, b) => new Date(a.date) - new Date(b.date))
             );
         });
@@ -122,9 +114,9 @@ function App() {
         <a href="#/currencies">Currencies</a>
         <br />
         <div>Choose your base currency</div>
-        <select className="select" value={baseConvertValue} title={getName(baseConvertValue)} onChange={handleSelect}>
+        <select className="select" value={baseConvertValue} onChange={handleSelect}>
           {currencyList.map(currency => (
-            <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
+            <option key={currency[0]}>{currency[0]}</option>
           ))}
         </select>
         <Switch>
@@ -135,9 +127,9 @@ function App() {
               {baseConvertValue}
               <br/>
               <input className="input" type="number" value={secondInput} onChange={handleSecondInput}/>
-              <select className="select" value={convertValue} title={getName(convertValue)} onChange={handleSecondSelect}>
+              <select className="select" value={convertValue} onChange={handleSecondSelect}>
                 {currencyList.map(currency => (
-                  <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
+                  <option key={currency[0]}>{currency[0]}</option>
                 ))}
               </select>
             </>
@@ -148,18 +140,18 @@ function App() {
               {favorites.map(currency => (
                 <div className="currencyRow" key={currency[0]}>
                   <button value={currency[0]} onClick={handleInfo}>Info</button>
-                  <span>{getName(currency[0])}</span>
+                  <span>{currency[0]}</span>
                   <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
-                  <button value={currency[0]} onClick={handleRemove}>Remove from faves</button>
+                  <button value={currency[0]} onClick={handleRemove}>&#10006;</button>
                 </div>
               ))}
               <h3>Currencies</h3>
-              {shortCurrencyList.map(currency => (
+              {currencyList.map(currency => (
                 <div className="currencyRow" key={currency[0]}>
                   <button value={currency[0]} onClick={handleInfo}>Info</button>
-                  <span>{getName(currency[0])}</span>
+                  <span>{currency[0]}</span>
                   <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
-                  <button value={currency} onClick={handleClick}>Add to faves</button>
+                  <button value={currency} onClick={handleClick}>&#9733;</button>
                 </div>
               ))}
               <div hidden={isHidden} className="chart">

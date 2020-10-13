@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { HashRouter, Switch, Route } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis } from 'recharts';
 import './App.css';
+
 
 function App() {
   const [currencyList, setCurrencyList] = useState([]);
+  const [shortCurrencyList, setShortList] = useState([]);
   const [currencyNames, setCurrencyNames] = useState([]);
   const [secondInput, setSecondInput] = useState(0);
   const [firstInput, setFirstInput] = useState(0);
@@ -10,8 +14,8 @@ function App() {
   const [convertValue, setConvertValue] = useState('EUR');
   const [favorites, setFavorites] = useState([]);
   const [days, setDays] = useState([]);
-  const [months, setMonths] = useState([]);
-  const [years, setYears] = useState([]);
+  const [choppedDays, setChoppedDays] = useState([]);
+  const [isHidden, setHidden] = useState(true);
 
   useEffect(() => {
     fetch('http://data.fixer.io/api/latest?access_key=48ae94633d08720a55c5b80edc727945')
@@ -20,6 +24,9 @@ function App() {
     fetch('http://data.fixer.io/api/symbols?access_key=48ae94633d08720a55c5b80edc727945')
       .then(response => { return response.json() })
       .then(data => setCurrencyNames(Object.entries(data.symbols)));
+    fetch('https://api.exchangeratesapi.io/latest')
+      .then(response => { return response.json() })
+      .then(data => setShortList(Object.entries(data.rates)));
   }, []);
 
   const getName = (currencyToFind) => {
@@ -68,56 +75,113 @@ function App() {
   };
 
   const handleInfo = ({target}) => {
-    for (let i = 0; i < 10; i++) {
-      fetch(`http://data.fixer.io/api/2020-10-${(new Date().getDate()) - i}?access_key=48ae94633d08720a55c5b80edc727945&base=${baseConvertValue}&symbols=${target.value}`)
+    if(shortCurrencyList.find(day => day[0] === target.value)) {
+      fetch(`https://api.exchangeratesapi.io/history?start_at=2015-10-10&end_at=2020-10-10&symbols=${target.value}`)
         .then(response => { return response.json() })
-        .then(data => setDays([
-            ...days,
-            data.rates,
-          ]));
+        .then(data => {
+          setDays(
+            Object.entries(data.rates)
+              .map(entry => ({date: entry[0], rate: entry[1][target.value]}))
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
+          );
+          setChoppedDays(
+            Object.entries(data.rates)
+              .map(entry => ({date: entry[0], rate: entry[1][target.value]}))
+              .sort((a, b) => new Date(a.date) - new Date(b.date))
+            );
+        });
+      setHidden(false);
+    } else {alert('sorry, no additional info on this currency')};
+  };
+
+  const handleDays = ({target}) => {
+    if(target.innerHTML === 'Last 30 days') {
+      setChoppedDays([...days].splice(days.length-25))
+    }
+    if(target.innerHTML === 'Last 12 months') {
+      setChoppedDays([...days].splice(days.length-300))
+    }
+    if(target.innerHTML === 'Last 5 years') {
+      setChoppedDays(days)
     }
   };
 
-  return (
-    <div className="App">
-      <h1>Currency Converter</h1>
-      <input type="number" value={firstInput} onChange={handleInput}/>
-      <select value={baseConvertValue} title={getName(baseConvertValue)} onChange={handleSelect}>
-        {currencyList.map(currency => (
-          <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
-        ))}
-      </select>
-      <br/>
-      <input type="number" value={secondInput} onChange={handleSecondInput}/>
-      <select value={convertValue} title={getName(convertValue)} onChange={handleSecondSelect}>
-        {currencyList.map(currency => (
-          <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
-        ))}
-      </select>
+  const handleClose = () => {
+    setHidden(true);
+  };
 
-      <div>
-        {favorites.length ? <h3>Favorite Currencies</h3> : null}
-        {favorites.map(currency => (
-          <div key={currency[0]}>
-            <span>{getName(currency[0])}</span>
-            -----
-            <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
-            <button value={currency[0]} onClick={handleRemove}>Remove from faves</button>
-            <button value={currency[0]}>Info</button>
-          </div>
-        ))}
-        <h3>Currencies</h3>
-        {currencyList.map(currency => (
-          <div key={currency[0]}>
-            <span>{getName(currency[0])}</span>
-            -----
-            <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
-            <button value={currency} onClick={handleClick}>Add to faves</button>
-            <button value={currency[0]} onClick={handleInfo}>Info</button>
-          </div>
-        ))}
+  return (
+    <HashRouter>
+      <div className="App">
+        <div
+          className="blurry"
+          hidden={isHidden}
+        ></div>
+        <a href="#/">Home</a>
+        {' '}
+        <a href="#/currencies">Currencies</a>
+        <br />
+        <div>Choose your base currency</div>
+        <select className="select" value={baseConvertValue} title={getName(baseConvertValue)} onChange={handleSelect}>
+          {currencyList.map(currency => (
+            <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
+          ))}
+        </select>
+        <Switch>
+          <Route path="/" exact render={() =>
+            <>
+              <h1>Currency Converter</h1>
+              <input className="input" type="number" value={firstInput} onChange={handleInput}/>
+              {baseConvertValue}
+              <br/>
+              <input className="input" type="number" value={secondInput} onChange={handleSecondInput}/>
+              <select className="select" value={convertValue} title={getName(convertValue)} onChange={handleSecondSelect}>
+                {currencyList.map(currency => (
+                  <option key={currency[0]} title={getName(currency[0])}>{currency[0]}</option>
+                ))}
+              </select>
+            </>
+          }/>
+          <Route path="/currencies" render={() =>
+            <div>
+              {favorites.length ? <h3>Favorite Currencies</h3> : null}
+              {favorites.map(currency => (
+                <div className="currencyRow" key={currency[0]}>
+                  <button value={currency[0]} onClick={handleInfo}>Info</button>
+                  <span>{getName(currency[0])}</span>
+                  <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
+                  <button value={currency[0]} onClick={handleRemove}>Remove from faves</button>
+                </div>
+              ))}
+              <h3>Currencies</h3>
+              {shortCurrencyList.map(currency => (
+                <div className="currencyRow" key={currency[0]}>
+                  <button value={currency[0]} onClick={handleInfo}>Info</button>
+                  <span>{getName(currency[0])}</span>
+                  <span>{(currency[1]/getValue(baseConvertValue)).toFixed(5)}</span>
+                  <button value={currency} onClick={handleClick}>Add to faves</button>
+                </div>
+              ))}
+              <div hidden={isHidden} className="chart">
+                <LineChart
+                  width={500}
+                  height={300}
+                  data={choppedDays}
+                >
+                  <XAxis dataKey="date" />
+                  <YAxis domain={['dataMin', 'dataMax']}/>
+                  <Line dataKey="rate"/>
+                </LineChart>
+                <button className="chartButton" onClick={handleDays}>Last 30 days</button>
+                <button className="chartButton" onClick={handleDays}>Last 12 months</button>
+                <button className="chartButton" onClick={handleDays}>Last 5 years</button>
+                <button className="chartButton" onClick={handleClose}>X</button>
+              </div>
+            </div>
+          }/>
+        </Switch>
       </div>
-    </div>
+    </HashRouter>
   );
 }
 

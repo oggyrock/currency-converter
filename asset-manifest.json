@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/http.//oggyrock.github.io/currency-converter/static/css/main.f3ad1929.chunk.css",
+    "main.js": "/http.//oggyrock.github.io/currency-converter/static/js/main.b8b86da8.chunk.js",
+    "main.js.map": "/http.//oggyrock.github.io/currency-converter/static/js/main.b8b86da8.chunk.js.map",
+    "runtime-main.js": "/http.//oggyrock.github.io/currency-converter/static/js/runtime-main.bea7cd21.js",
+    "runtime-main.js.map": "/http.//oggyrock.github.io/currency-converter/static/js/runtime-main.bea7cd21.js.map",
+    "static/js/2.6627fd07.chunk.js": "/http.//oggyrock.github.io/currency-converter/static/js/2.6627fd07.chunk.js",
+    "static/js/2.6627fd07.chunk.js.map": "/http.//oggyrock.github.io/currency-converter/static/js/2.6627fd07.chunk.js.map",
+    "index.html": "/http.//oggyrock.github.io/currency-converter/index.html",
+    "precache-manifest.7e438374ad0c0c34f28a1789475a34b4.js": "/http.//oggyrock.github.io/currency-converter/precache-manifest.7e438374ad0c0c34f28a1789475a34b4.js",
+    "service-worker.js": "/http.//oggyrock.github.io/currency-converter/service-worker.js",
+    "static/css/main.f3ad1929.chunk.css.map": "/http.//oggyrock.github.io/currency-converter/static/css/main.f3ad1929.chunk.css.map",
+    "static/js/2.6627fd07.chunk.js.LICENSE.txt": "/http.//oggyrock.github.io/currency-converter/static/js/2.6627fd07.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.bea7cd21.js",
+    "static/js/2.6627fd07.chunk.js",
+    "static/css/main.f3ad1929.chunk.css",
+    "static/js/main.b8b86da8.chunk.js"
+  ]
+}
